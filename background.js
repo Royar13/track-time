@@ -1,52 +1,6 @@
-class Session {
-	constructor(tabId, url) {
-		this.tabId = tabId;
-		this.url = url;
-		this.duration = 0;
-		this.paused = false;
-		this.startTime = Date.now();
-		this.currentTime = this.startTime;
-	}
-
-	resume() {
-		if (this.paused) {
-			this.paused = false;
-			this.currentTime = Date.now();
-		}
-	}
-
-	pause() {
-		if (!this.paused) {
-			this.duration += Math.round((Date.now() - this.currentTime) / 1000);
-			this.paused = true;
-		}
-	}
-}
-
-function createSession(tabId, url) {
-	newSession = new Session(tabId, url);
-	activeSessions.push(newSession);
-	sessions.push(newSession);
-}
-
-function endSession(session) {
-	session.pause();
-	index = activeSessions.indexOf(session);
-	activeSessions.splice(index, 1);
-}
-
-function save() {
-	chrome.storage.local.set({ "sessions": sessions });
-}
-
-function isMonitoredUrl(urlStr) {
-	let url = new URL(urlStr);
-	return monitoredUrls.some(h => url.host.endsWith(h));
-}
-
 let activeTabId = -1;
 let changed = false;
-let monitoredUrls = ["youtube.com"]
+let monitoredUrls = ["youtube.com"];
 let sessions = [];
 chrome.storage.local.get("sessions", (data) => {
 	if (data.sessions) {
@@ -54,8 +8,7 @@ chrome.storage.local.get("sessions", (data) => {
 	}
 });
 let activeSessions = [];
-
-setInterval(save, 3000);
+let db;
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
 	let prevSession = activeSessions.find(s => s.tabId === activeTabId);
@@ -111,3 +64,98 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 		session.pause();
 	}
 });
+
+openDB();
+
+setInterval(saveCurrentTab, 5000);
+
+class Session {
+	constructor(tabId, url) {
+		this.tabId = tabId;
+		this.url = url;
+		this.duration = 0;
+		this.paused = false;
+		this.startTime = Date.now();
+		this.currentTime = this.startTime;
+	}
+
+	updateDuration() {
+		this.duration += Math.round((Date.now() - this.currentTime) / 1000);
+		this.currentTime = Date.now();
+	}
+
+	resume() {
+		if (this.paused) {
+			this.paused = false;
+			this.currentTime = Date.now();
+		}
+	}
+
+	pause() {
+		if (!this.paused) {
+			this.updateDuration();
+			this.paused = true;
+		}
+	}
+}
+
+function createSession(tabId, url) {
+	newSession = new Session(tabId, url);
+	activeSessions.push(newSession);
+	sessions.push(newSession);
+}
+
+function endSession(session) {
+	session.pause();
+	index = activeSessions.indexOf(session);
+	activeSessions.splice(index, 1);
+}
+
+function saveCurrentTab() {
+	let session = activeSessions.find(s => s.tabId === activeTabId);
+	if (session) {
+		session.updateDuration();
+		saveSession(session);
+	}
+}
+
+function isMonitoredUrl(urlStr) {
+	let url = new URL(urlStr);
+	return monitoredUrls.some(h => url.host.endsWith(h));
+}
+
+function openDB() {
+	let request = indexedDB.open("TrackTime", 2);
+
+	request.onsuccess = (e) => {
+		db = e.target.result;
+	};
+
+	request.onerror = (e) => {
+		throw new Error("Database error: " + event.target.errorCode);
+	};
+
+	request.onupgradeneeded = (e) => {
+		let db = event.target.result;
+		if (!db.objectStoreNames.contains("sessions")) {
+			let objectStore = db.createObjectStore("sessions", { keyPath: "id", autoIncrement: true });
+			objectStore.createIndex("startTime", "startTime", { unique: false });
+		}
+	};
+}
+
+function saveSession(session) {
+	let tx = db.transaction("sessions", "readwrite");
+	let store = tx.objectStore("sessions");
+	if (session.id) {
+		//already inserted
+		store.put(session);
+	}
+	else {
+		let request = store.add(session);
+
+		request.onsuccess = (e) => {
+			session.id = e.target.result;
+		};
+	}
+}

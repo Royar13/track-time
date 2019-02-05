@@ -14,6 +14,7 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 	let prevSession = activeSessions.find(s => s.tabId === activeTabId);
 	if (prevSession) {
 		prevSession.pause();
+		saveSession(prevSession);
 	}
 	activeTabId = activeInfo.tabId;
 	let currentSession = activeSessions.find(s => s.tabId === activeTabId);
@@ -61,13 +62,13 @@ chrome.webNavigation.onCompleted.addListener((e) => {
 chrome.tabs.onRemoved.addListener((tabId) => {
 	let session = activeSessions.find(s => s.tabId === tabId);
 	if (session) {
-		session.pause();
+		endSession(session);
 	}
 });
 
 openDB();
 
-setInterval(saveCurrentTab, 5000);
+setInterval(saveCurrentTab, 60000);
 
 class Session {
 	constructor(tabId, url) {
@@ -80,8 +81,10 @@ class Session {
 	}
 
 	updateDuration() {
-		this.duration += Math.round((Date.now() - this.currentTime) / 1000);
-		this.currentTime = Date.now();
+		if (!this.paused) {
+			this.duration += Math.round((Date.now() - this.currentTime) / 1000);
+			this.currentTime = Date.now();
+		}
 	}
 
 	resume() {
@@ -107,6 +110,7 @@ function createSession(tabId, url) {
 
 function endSession(session) {
 	session.pause();
+	saveSession(session);
 	index = activeSessions.indexOf(session);
 	activeSessions.splice(index, 1);
 }

@@ -1,0 +1,22 @@
+{
+	"name": "TrackTime",
+	"version": "1.0",
+	"description": "Track time wasted on the internet",
+	"permissions": [
+		"storage",
+		"tabs"
+	],
+	"background": {
+		"scripts": [
+			"background.js"
+		],
+		"persistent": false
+	},
+	"browser_action": {
+		"default_popup": "popup.html",
+		"default_icon": {
+			"16": "img/clock16.png"
+		}
+	},
+	"manifest_version": 2
+}

@@ -4,7 +4,8 @@
 	"description": "Track time wasted on the internet",
 	"permissions": [
 		"storage",
-		"tabs"
+		"tabs",
+		"webNavigation"
 	],
 	"background": {
 		"scripts": [

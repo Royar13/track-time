@@ -1,6 +1,7 @@
 let activeTabId = -1;
+let tabActivatedTime = 0;
 let changed = false;
-let monitoredUrls = ["youtube.com"];
+let monitoredUrls = ["youtube.com", "9gag.com", "facebook.com", "sport5.co.il", "chess.com", "lichess.org", "twitch.tv"];
 let sessions = [];
 chrome.storage.local.get("sessions", (data) => {
 	if (data.sessions) {
@@ -11,17 +12,12 @@ let activeSessions = [];
 let db;
 
 chrome.tabs.onActivated.addListener((activeInfo) => {
-	let prevSession = activeSessions.find(s => s.tabId === activeTabId);
-	if (prevSession) {
-		prevSession.pause();
-		saveSession(prevSession);
-	}
+	updateCurrentSessionDuration();
+
 	activeTabId = activeInfo.tabId;
-	let currentSession = activeSessions.find(s => s.tabId === activeTabId);
-	if (currentSession) {
-		currentSession.resume();
-	}
-	else {
+	tabActivatedTime = Date.now();
+
+	if (!activeSessions.some(s => s.tabId === activeTabId)) {
 		chrome.tabs.query({ active: true }, (tabs) => {
 			if (tabs.length >= 1 && isMonitoredUrl(tabs[0].url)) {
 				createSession(activeTabId, tabs[0].url);
@@ -32,73 +28,56 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
 // chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
 chrome.webNavigation.onCompleted.addListener((e) => {
+	if (e.frameId !== 0 || e.tabId !== activeTabId) {
+		return;
+	}
 	let urlStr = e.url;
-	let tabId = e.tabId;
 	let url = new URL(urlStr);
-	session = activeSessions.find(s => s.tabId === tabId);
+	session = activeSessions.find(s => s.tabId === activeTabId);
 
 	if (isMonitoredUrl(urlStr)) {
 		if (session) {
 			previousUrl = new URL(session.url);
 			if (previousUrl.host !== url.host) {
-				session.pause();
-				createSession(tabId, urlStr);
-			}
-			else {
-				session.resume();
+				updateCurrentSessionDuration();
+				endSession(session);
+				createSession(activeTabId, urlStr);
 			}
 		}
 		else {
-			createSession(tabId, urlStr);
+			createSession(activeTabId, urlStr);
 		}
 	}
-	else {
-		if (session) {
-			session.pause();
-		}
+	else if (session) {
+		updateCurrentSessionDuration();
+		endSession(session);
 	}
 });
 
 chrome.tabs.onRemoved.addListener((tabId) => {
 	let session = activeSessions.find(s => s.tabId === tabId);
 	if (session) {
+		if (tabId === activeTabId) {
+			updateCurrentSessionDuration();
+		}
 		endSession(session);
 	}
 });
 
 openDB();
 
-setInterval(saveCurrentTab, 60000);
+setInterval(updateCurrentSessionDuration, 60000);
 
 class Session {
 	constructor(tabId, url) {
 		this.tabId = tabId;
 		this.url = url;
 		this.duration = 0;
-		this.paused = false;
 		this.startTime = Date.now();
-		this.currentTime = this.startTime;
 	}
 
-	updateDuration() {
-		if (!this.paused) {
-			this.duration += Math.round((Date.now() - this.currentTime) / 1000);
-			this.currentTime = Date.now();
-		}
-	}
-
-	resume() {
-		if (this.paused) {
-			this.paused = false;
-			this.currentTime = Date.now();
-		}
-	}
-
-	pause() {
-		if (!this.paused) {
-			this.updateDuration();
-			this.paused = true;
-		}
+	increaseDuration(val) {
+		this.duration += val;
 	}
 }
 
@@ -109,16 +88,18 @@ function createSession(tabId, url) {
 }
 
 function endSession(session) {
-	session.pause();
-	saveSession(session);
 	index = activeSessions.indexOf(session);
 	activeSessions.splice(index, 1);
 }
 
-function saveCurrentTab() {
+function calculateDuration() {
+	return Math.round((Date.now() - tabActivatedTime) / 1000);
+}
+
+function updateCurrentSessionDuration() {
 	let session = activeSessions.find(s => s.tabId === activeTabId);
 	if (session) {
-		session.updateDuration();
+		session.increaseDuration(calculateDuration());
 		saveSession(session);
 	}
 }

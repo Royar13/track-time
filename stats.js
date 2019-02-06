@@ -1,5 +1,5 @@
 let db;
-let colors;
+let colors = ["33, 97, 198", "209, 14, 24", "33, 163, 27", "220, 210, 9", "182, 15, 93", "20, 167, 187", "233, 161, 8"];
 
 $(document).ready(() => {
 	openDB().then((result) => {
@@ -14,11 +14,7 @@ function initialize() {
 
 	request.onsuccess = (event) => {
 		let sessions = event.target.result;
-		//TODO: for testing only, remove later
-		for (i = 0; i < 20; i++) {
-			sessions[i].startTime -= 10 * 3600 * 1000;
-		}
-		colors = ["33, 97, 198", "209, 14, 24", "33, 163, 27", "220, 210, 9", "182, 15, 93", "20, 167, 187", "233, 161, 8"];
+
 		generateTimePerDayChart(sessions);
 		generateTodayWebsitesBars(sessions);
 		generateWebsitesPieChart(sessions);

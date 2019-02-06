@@ -1,0 +1,36 @@
+#charts {
+	padding: 20px;
+	overflow: auto;
+}
+
+#charts canvas {
+	float: left;
+	margin-right: 20px;
+}
+
+#sessions {
+	float: right;
+	width: 260px;
+}
+
+.session {
+	position: relative;
+	background-color: #e4e4e4;
+	padding: 10px;
+	margin-bottom: 5px;
+	border-radius: 5px;
+	-webkit-transform-origin-x: 0;
+}
+
+.session h3 {
+	text-shadow: 1px 1px 1px #555;
+	text-overflow: ellipsis;
+	overflow: hidden; 
+	white-space: nowrap;
+}
+
+.session .sid {
+	position: absolute;
+	top: 3px;
+	right: 3px;
+}

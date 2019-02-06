@@ -9,6 +9,7 @@
 	],
 	"background": {
 		"scripts": [
+			"main.js",
 			"background.js"
 		],
 		"persistent": false

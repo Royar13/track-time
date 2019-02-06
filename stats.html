@@ -3,15 +3,29 @@
 
 <head>
 	<title>TrackTime Stats</title>
+	<link rel="stylesheet" href="stats.css">
 	<script src="jquery-3.3.1.min.js"></script>
+	<script src="moment.min.js"></script>
+	<script src="Chart.min.js"></script>
+	<script src="main.js"></script>
 	<script src="stats.js"></script>
 	<link rel="icon" href="img/clock16.png">
 </head>
 
 <body>
 	<h1>Stats</h1>
-	<div id="sessions">
+	<div id="container">
+		<div id="sessions">
+			<h2>Last 10 sessions</h2>
+			<div id="sessionsContainer">
 
+			</div>
+		</div>
+		<div id="charts">
+			<canvas id="timePerDay" width="500" height="400"></canvas>
+			<canvas id="todayWebsitesBars" width="500" height="400"></canvas>
+			<canvas id="websitesPieChart" width="500" height="400"></canvas>
+		</div>
 	</div>
 </body>
 

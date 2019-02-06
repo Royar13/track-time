@@ -27,7 +27,7 @@ function initialize() {
 }
 
 function generateSessions(sessions) {
-	let todayTime = moment().startOf("day").unix();
+	let todayTime = moment().startOf("day").unix() * 1000;
 	let todaySessions = sessions.filter(s => s.startTime >= todayTime);
 	let max = -1;
 	for (i = todaySessions.length - 1; i >= Math.max(todaySessions.length - 10, 0); i--) {
@@ -58,7 +58,7 @@ function generateSessions(sessions) {
 }
 
 function generateTodayWebsitesBars(sessions) {
-	let todayTime = moment().startOf("day").unix();
+	let todayTime = moment().startOf("day").unix() * 1000;
 	let todaySessions = sessions.filter(s => s.startTime >= todayTime);
 	let data = aggregateDataByWebsite(todaySessions);
 
@@ -93,6 +93,8 @@ function generateTodayWebsitesBars(sessions) {
 
 function generateWebsitesPieChart(sessions) {
 	let data = aggregateDataByWebsite(sessions);
+	let daysAmount = moment(sessions[sessions.length - 1].startTime).startOf("day").diff(moment(sessions[0].startTime).startOf("day"), "days") + 1;
+	data = data.map(d => Math.ceil(d / daysAmount));
 
 	let ctx = document.getElementById("websitesPieChart").getContext('2d');
 	let doughnutChart = new Chart(ctx, {
@@ -108,7 +110,7 @@ function generateWebsitesPieChart(sessions) {
 			responsive: false,
 			title: {
 				display: true,
-				text: "Website distribution"
+				text: "Average daily time per site"
 			}
 		}
 	});
@@ -191,5 +193,6 @@ function aggregateDataByWebsite(sessions) {
 			}
 		}
 	});
+	data = data.map(t => Math.ceil(t));
 	return data;
 }

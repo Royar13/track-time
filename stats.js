@@ -126,9 +126,11 @@ function generateTimePerDayChart(sessions) {
 	let data = aggregateDataByDay(sessions);
 
 	let ctx = document.getElementById("timePerDay").getContext('2d');
+	let labels = data.map((t, i) => i + 1);
 	let lineChart = new Chart(ctx, {
 		type: "line",
 		data: {
+			labels: labels,
 			datasets: [{
 				label: "Time by day",
 				borderColor: "rgb(44, 108, 211)",
@@ -148,6 +150,11 @@ function generateTimePerDayChart(sessions) {
 						labelString: "Time (minutes)"
 					}
 				}]
+			},
+			elements: {
+				line: {
+					tension: 0, // disables bezier curves
+				}
 			}
 		}
 	});
@@ -166,6 +173,7 @@ function aggregateDataByDay(sessions) {
 		data[currentDay] += session.duration / 60;
 		prevDate = moment(session.startTime);
 	});
+	data = data.map(t => Math.ceil(t));
 	return data;
 }
 

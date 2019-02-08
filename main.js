@@ -37,6 +37,7 @@ function updateCurrentSessionDuration() {
 	let session = activeSessions.find(s => s.tabId === activeTabId);
 	if (session) {
 		session.increaseDuration(calculateDuration());
+		tabActivatedTime = Date.now();
 		saveSession(session);
 	}
 }

@@ -5,7 +5,8 @@
 	"permissions": [
 		"storage",
 		"tabs",
-		"webNavigation"
+		"webNavigation",
+		"alarms"
 	],
 	"background": {
 		"scripts": [

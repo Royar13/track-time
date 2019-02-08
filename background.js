@@ -51,6 +51,15 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 	}
 });
 
-openDB();
+chrome.alarms.onAlarm.addListener(function (alarm) {
+	if (alarm.name === "saveCurrentSession") {
+		updateCurrentSessionDuration();
+	}
+});
 
-setInterval(updateCurrentSessionDuration, 60000);
+chrome.alarms.create("saveCurrentSession", {
+	delayInMinutes: 1,
+	periodInMinutes: 1
+});
+
+openDB();

@@ -63,3 +63,9 @@ chrome.alarms.create("saveCurrentSession", {
 });
 
 openDB();
+
+//temp fix for first tab not firing activated event
+chrome.tabs.query({ active: true }, (tabs) => {
+	activeTabId = tabs[0].id;
+	tabActivatedTime = Date.now();
+});

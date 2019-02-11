@@ -51,8 +51,8 @@ chrome.tabs.onRemoved.addListener((tabId) => {
 	}
 });
 
-chrome.alarms.onAlarm.addListener(function (alarm) {
-	if (alarm.name === "saveCurrentSession") {
+chrome.alarms.onAlarm.addListener((alarm) => {
+	if (!isIdle && alarm.name === "saveCurrentSession") {
 		updateCurrentSessionDuration();
 	}
 });
@@ -60,6 +60,19 @@ chrome.alarms.onAlarm.addListener(function (alarm) {
 chrome.alarms.create("saveCurrentSession", {
 	delayInMinutes: 1,
 	periodInMinutes: 1
+});
+
+
+chrome.idle.setDetectionInterval(300);
+chrome.idle.onStateChanged.addListener((newState) => {
+	if (newState === "idle" || newState === "locked") {
+		updateCurrentSessionDuration();
+		isIdle = true;
+	}
+	else if (newState === "active") {
+		tabActivatedTime = Date.now();
+		isIdle = false;
+	}
 });
 
 openDB();

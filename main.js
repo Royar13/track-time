@@ -4,6 +4,7 @@ let monitoredUrls = ["youtube.com", "9gag.com", "facebook.com", "sport5.co.il", 
 let sessions = [];
 let activeSessions = [];
 let dbPromise;
+let isIdle = false;
 
 class Session {
 	constructor(tabId, url) {
